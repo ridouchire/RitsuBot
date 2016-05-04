@@ -1,0 +1,98 @@
+# -*- coding:utf-8 -*-
+import xmpp, re
+from ritsu_api import *
+from ritsu_utils import *
+
+flood_control = {}
+
+def timer_flood_control(bot, arg):
+  for x in flood_control.keys():
+    if flood_control[x] > 0:
+      flood_control[x] -= 1
+    else:
+      del flood_control[x]
+
+flood_timer = TimedEventHandler(timer_flood_control, 2)
+
+def check_flood_control(bot, room, nick, text, typ):
+  fc = flood_control.get(room+'/'+nick, 0)
+  fc += 2
+  if text[0] != bot.get_config(room, 'command_prefix'):
+    if len(text) > 40: fc += 1
+    elif len(text) < 6: fc += 1
+    elif len(text) < 4: fc += 2
+    elif len(text) < 2: fc += 3
+  reason = 'Не флуди!'
+  if typ != 'groupchat':
+    reason = 'Не флуди в личку боту!'
+  fclimit = 8
+  if fc > fclimit:
+    bot.client.send(iq_set_role(room, nick, 'none', reason))
+    fc = 0
+  flood_control[room+'/'+nick] = fc
+
+def check_long_text_kick(bot, room, nick, text):
+  if len(text) > 500 or text.count('\n') > 10:
+    bot.client.send(iq_set_role(room, nick, 'none', 'Твоё сообщение длинное - пользуйся pastebin!'))
+
+def check_bad_words_kick(bot, room, nick, text, reason):
+  if hasbadwords(text):
+    bot.client.send(iq_set_role(room, nick, 'none', reason))
+
+def check_caps_kick(bot, room, nick, text):
+  caps = re.sub('[^A-Z]+', '', text)
+  nocaps = re.sub('[^a-z]+', '', text)
+  threshold = 0
+  if len(caps) > 7:
+    threshold = float(len(caps))/(len(caps)+len(nocaps))
+  if threshold > 0.66:
+    bot.client.send(iq_set_role(room, nick, 'none', "Не пиши ВСЁ КАПСОМ. При повторе - бан."))
+
+def check_long_nick_kick(bot, room, nick, role):
+  if role == 'moderator': return
+  if len(nick) > 30:
+    bot.client.send(iq_set_role(room, nick, 'none', 'Не выёбывайся именем.'))
+
+def event_nick_changed(bot, (presence, room, nick, newnick)):
+  check_long_nick_kick(bot, room, newnick, bot.roster[room][nick][ROSTER_ROLE])
+
+def event_joined(bot, (presence, room, nick, jid, role, affiliation, status, status_text)):
+  check_long_nick_kick(bot, room, nick, role)
+
+def event_room_roster(bot, (presence, room, nick, jid, role, affiliation, status, status_text)):
+  check_long_nick_kick(bot, room, nick, role)
+
+def event_room_presence(bot, (presence, room, nick)):
+  if nick in bot.roster[room]:
+    if bot.roster[room][nick][ROSTER_ROLE] == 'moderator': return
+  if 'badwords_kick' in bot.get_config(room, 'options'):
+    status_text = presence.getTagData('status')
+    if status_text:
+      check_bad_words_kick(bot, room, nick, status_text, 'Дерьмовый статус.')
+    check_bad_words_kick(bot, room, nick, nick, 'Дерьмовый ник.')
+  
+def event_room_message(bot, (message, room, nick)):
+  if not nick: return
+  if nick in bot.roster[room]:
+    if bot.roster[room][nick][ROSTER_ROLE] == 'moderator': return
+  text = message.getBody()
+  if not text: return
+  typ = message.getType()
+  if typ == 'groupchat' and text:
+    if 'caps_kick' in bot.get_config(room, 'options'):
+      check_caps_kick(bot, room, nick, text)
+    if 'badwords_kick' in bot.get_config(room, 'options'):
+      check_bad_words_kick(bot, room, nick, text, 'Следи за языком.')
+      check_long_text_kick(bot, room, nick, text)
+
+  check_flood_control(bot, room, nick, text, typ)
+
+def load(bot):
+  bot.timed_events.add(flood_timer)
+
+def unload(bot):
+  bot.timed_events.remove(flood_timer)
+
+def info(bot):
+  return 'User limits plugin v1.0.2'
+  
