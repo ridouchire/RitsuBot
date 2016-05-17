@@ -35,6 +35,9 @@ def load(bot):
   bot.add_command(u'пинг', command_ping, LEVEL_GUEST, 'ping')
   bot.add_command(u'зштп', command_ping, LEVEL_GUEST, 'ping')
   bot.add_command('gbyu', command_ping, LEVEL_GUEST, 'ping')
+# All praise the Colemak
+  bot.add_command(u'кдое', command_ping, LEVEL_GUEST, 'ping')
+  bot.add_command('dbjl', command_ping, LEVEL_GUEST, 'ping')
 
 def unload(bot):
   pass
