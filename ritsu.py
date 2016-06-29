@@ -66,19 +66,14 @@ class RitsuBot(object):
     self.commands = {}
     self.add_command('crash', self.command_crash, LEVEL_BOT_OWNER) 	# закладка в исключительной ситуации
     self.add_command('quit', self.command_quit, LEVEL_BOT_OWNER)	# завершение работы
-    #self.add_command('eval', self.command_eval, LEVEL_BOT_OWNER)	# достаточно опасные команды,
-    #self.add_command('exec', self.command_exec, LEVEL_BOT_OWNER)	# которые лучше по умолчанию выключить
     self.add_command('setnick', self.command_setnick, LEVEL_ADMIN)
     self.add_command('setstatus', self.command_setstatus, LEVEL_ADMIN)
-    #self.add_command('option', self.command_option, LEVEL_ADMIN)	# лучше совершать конфигурацию руками
-    #self.add_command('options', self.command_options, LEVEL_ADMIN)	# так намного безопасней
     self.add_command('access', self.command_access, LEVEL_GUEST)	# уровень доступа
     self.add_command('help', self.command_list, LEVEL_GUEST)		# список всех активных команд
     self.add_command('source', self.command_source, LEVEL_GUEST)	# версия
-    self.add_command('reload', self.auto_reload_plugin, LEVEL_OWNER)	# в случае ошибки перезагружаем плагины в горячем режиме
+    self.add_command('reload', self.auto_reload_plugin, LEVEL_OWNER)
     self.add_command('unload', self.inter_unload_plugin, LEVEL_OWNER)   # выгрузка выбранного плагина
     self.add_command('load', self.inter_load_plugin, LEVEL_OWNER) 	# загрузка плагина
-    self.add_command('adwork', self.admin_work, LEVEL_OWNER)		# выгрузка всех плагинов
 
     jid = xmpp.JID(self.configuration['jid'])
     server = self.configuration['server']

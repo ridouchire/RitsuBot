@@ -47,7 +47,7 @@ def get_title(rec):
 def get_link_title(link):
   try:
     opener = urllib2.build_opener()
-    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+    opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux i686; rv:40.0) Gecko/20100101 Firefox/40.0')]
     site = opener.open(link)
   except urllib2.HTTPError, e:
     if e.code == 404:
