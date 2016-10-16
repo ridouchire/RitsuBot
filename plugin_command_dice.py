@@ -8,6 +8,8 @@ def command_dice(bot, room, nick, access_level, parameters, message):
   if not parameters:
     return u'Ты выиграл!'
   dice_strs = map(lambda x: x.strip(), parameters.split(';'))
+  if len(dice_strs) > 10:
+    return u'Дохуя кубиков за раз!'
   return u'\n'.join(map(run_dice, dice_strs))
 
 def run_dice(dice_str):
