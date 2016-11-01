@@ -1,48 +1,52 @@
 # -*-coding:utf-8 -*-
-
 import re
 from ritsu_api import *
 from ritsu_utils import *
-from BeautifulSoup import BeautifulSoup
 import urllib2
 
+import logging as log
+log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+
 def info(bot):
-  return 'Links parsing plugin 0.0.2'
+    return 'Links parsing plugin 1.0.0-alpha'
 
 def load(bot):
-  pass
+    pass
 
 def unload(bot):
-  pass
+    pass
 
 def event_room_message(bot, (message, room, nick)):
-  if message.getType() == 'groupchat':
-    target = room
-  else:
-    target = room+'/'+nick
+    if message.getType() == 'groupchat':
+        target = room
+    else:
+        target = room+'/'+nick
 
-  text = message.getBody()
-  if text:
-    if nick == bot.self_nick[room] and "'s link: " in text:
-      return
-    regexp = r'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/&=\$\-\~\.\+\!\?\*\'\(\)\,\%\w]*)'
-    link = re.findall(regexp, text)
-    
-    if link:
-      try:
-	source = get_link_title(link[0])
-      except Exception, e:
-	return "Error get_link_title()."
-      try:
-	res = "%s"%(source)
-	bot.send_room_message(target, res)
-      except Exception, e:
-	return "Other error."
+    text = message.getBody()
+    if text:
+        if nick == bot.self_nick[room] and "'s link: " in text:
+            return
+        regex_str = ur'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/\$\-\~\.\+\!\?\*\'\(\)\,\%\w\u0410-\u044f]*)'
+        regex = re.compile(regex_str, re.UNICODE)
+        link = re.findall(regex, text.decode('utf8'))
+        if len(link) > 0:
+            try:
+	        source = get_link_title(link[0])
+            except Exception as e:
+                log.error('An error occurred while parsing the title: {}'.format(e.message))
+                return                
+            try:
+                res = "%s"%(source)
+                bot.send_room_message(target, res)
+            except Exception as e:
+                log.error('An error occurred while sending a title parsing result.: {}'.format(e.message))              
+	
 
 def get_title(rec):
-    soup = BeautifulSoup(rec)
-    title = soup.html.head.title.string
-    return title
+    title_regex = ur'<title>(.*?)</title>'
+    title = re.findall(title_regex, rec)
+    if len(title) > 0:
+        return title[0]
 
 def get_link_title(link):
   try:
