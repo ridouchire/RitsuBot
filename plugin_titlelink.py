@@ -31,15 +31,15 @@ def event_room_message(bot, (message, room, nick)):
         link = re.findall(regex, text.decode('utf8'))
         if len(link) > 0:
             try:
-	        source = get_link_title(link[0])
+	        source = get_link_title(link[0].encode('utf8'))
             except Exception as e:
-                log.error('An error occurred while parsing the title: {}'.format(e.message))
+                log.error('An error occurred while parsing the title: {}'.format(e))
                 return                
             try:
-                res = "%s"%(source)
+                res = source.encode('utf8')
                 bot.send_room_message(target, res)
             except Exception as e:
-                log.error('An error occurred while sending a title parsing result.: {}'.format(e.message))              
+                log.error('An error occurred while sending a title parsing result.: {}'.format(e))              
 	
 
 def get_title(rec):
@@ -60,6 +60,8 @@ def get_link_title(link):
       return '%s: страница ограничена к просмотру'%(e.code)
     else:
       return 'Код ошибки %s.'%(e.code)
+  except urllib2.URLError, e:
+      return 'Эта параша не резолвится'.decode('utf8')
   if re.search('http://(www\.)?opennet.ru/.*', link):
     rec = site.read().decode("koi8-r")
   else:
