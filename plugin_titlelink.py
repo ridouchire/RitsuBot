@@ -26,7 +26,7 @@ def event_room_message(bot, (message, room, nick)):
     if text:
         if nick == bot.self_nick[room] and "'s link: " in text:
             return
-        regex_str = ur'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/\$\-\~\.\+\!\?\*\'\(\)\,\%\w\u0410-\u044f]*)'
+        regex_str = ur'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/\$\-\~\.\+\=\&\!\?\*\'\(\)\,\%\w\u0410-\u044f]*)'
         regex = re.compile(regex_str, re.UNICODE)
         try:
             link = re.findall(regex, text.decode('utf8'))
