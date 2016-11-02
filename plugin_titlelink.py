@@ -50,6 +50,8 @@ def get_title(rec):
     title = re.findall(title_regex, rec)
     if len(title) > 0:
         return title[0]
+    else:
+        return None
 
 def get_link_title(link):
   try:
@@ -72,6 +74,8 @@ def get_link_title(link):
       rec = site.read().decode("utf-8")
     except UnicodeDecodeError:
       rec = site.read().decode("windows-1251")
-  site.close
   title = get_title(rec)
+  if title is None:
+      title = site.headers.gettype()
+  site.close()
   return "%s" % (title)
