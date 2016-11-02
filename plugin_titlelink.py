@@ -28,7 +28,10 @@ def event_room_message(bot, (message, room, nick)):
             return
         regex_str = ur'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/\$\-\~\.\+\!\?\*\'\(\)\,\%\w\u0410-\u044f]*)'
         regex = re.compile(regex_str, re.UNICODE)
-        link = re.findall(regex, text.decode('utf8'))
+        try:
+            link = re.findall(regex, text.decode('utf8'))
+        except UnicodeEncodeError as e:
+            link =  re.findall(regex, text)
         if len(link) > 0:
             try:
 	        source = get_link_title(link[0].encode('utf8'))
@@ -61,7 +64,7 @@ def get_link_title(link):
     else:
       return 'Код ошибки %s.'%(e.code)
   except urllib2.URLError, e:
-      return 'Эта параша не резолвится'.decode('utf8')
+      return 'This URL could not be resolved.'.decode('utf8')
   if re.search('http://(www\.)?opennet.ru/.*', link):
     rec = site.read().decode("koi8-r")
   else:
