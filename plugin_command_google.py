@@ -36,7 +36,7 @@ def get_search_page(query, engine='google', custom_query_url=None):
     except Exception as e:
         log.error('An error has occured while page loading: {}'.format(e))
         return None
-    return response
+    return response.content
 
 def get_links(query, engine):
     try:
@@ -49,7 +49,7 @@ def get_links(query, engine):
     result = []
     if engine is 'google':
         link_regex_str = r'<a href="(.*?)"'
-        links = [link.split(' ')[0] for link in re.findall(link_regex_str, page.content)
+        links = [link.split(' ')[0] for link in re.findall(link_regex_str, page)
                  if link.startswith('http')]
         log.debug(links)
         for link in links:
@@ -58,7 +58,7 @@ def get_links(query, engine):
                 result.append(link)            
     elif engine is 'sputnik':
         link_regex_str = r'<div class=\"b-result-title\">.*<a href=\"(.*?)\".*<\/div>'
-        result = re.findall(link_regex_str, page.content)
+        result = re.findall(link_regex_str, page)
     else:
         raise ValueError('"engine" must be either "google" or "sputnik"')
     return result
