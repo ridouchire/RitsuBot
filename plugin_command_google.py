@@ -9,7 +9,7 @@ import logging as log
 
 log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
 
-def get_search_page(query, engine):
+def get_search_page(query, engine, custom_query_url=None):
     if not isinstance(query, str):
         raise TypeError('"query" must be "str", not "{}"'.format(
             query.__class__.__name__
@@ -17,14 +17,15 @@ def get_search_page(query, engine):
     if len(query) is 0:
         raise ValueError('"query" length must be greater than 0"')
 
+    if custom_query_url:
+        url = custom_query_url.format(query)
     if engine is 'google':
-        url = requests.utils.requote_uri("https://www.google.com/search?q=" +
-                                         query +
-                                         "&ie=utf-8&oe=utf-8")
+        url = "https://www.google.com/search?q={}".format(query)
     elif engine is 'sputnik':
-         url = requests.utils.requote_uri("http://www.sputnik.ru/search?q=" + query)
+         url = "http://www.sputnik.ru/search?q={}".format(query)
     else:
         raise ValueError('"engine" must be either "google" or "sputnik"')
+    url = requests.utils.requote_uri(url)
     headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:46.0) Gecko/20100101 Firefox/46.0'
     }
