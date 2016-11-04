@@ -62,14 +62,14 @@ def get_links(query, engine):
 
 def get_search_function(engine):
     def command_search(bot, room, nick, access_level, parameters, message):
-        if nick != bot.gss['nick']:
+        if nick != bot.ss[engine]['nick']:
             if not parameters:
                 return 'Query expected.'    
         else:
-            if parameters == bot.gss['query'] or not parameters:
-                if bot.gss['current'] < len(bot.gss['links']) - 1:            
-                    bot.gss['current'] = bot.gss['current'] + 1
-                    return bot.gss['links'][bot.gss['current']]
+            if parameters == bot.ss[engine]['query'] or not parameters:
+                if bot.ss[engine]['current'] < len(bot.ss[engine]['links']) - 1:
+                    bot.ss[engine]['current'] = bot.ss[engine]['current'] + 1
+                    return bot.ss[engine]['links'][bot.ss[engine]['current']]
                 else:
                     return "End of search results. Please refine your search query."
         links = get_link(parameters, engine)
@@ -77,29 +77,37 @@ def get_search_function(engine):
             return 'Search error! Please contact your system administrator.'
         if links is []:
             return 'Nothing is found!'
-        bot.gss['links'] = links
-        bot.gss['query'] = parameters
-        bot.gss['current'] = 0
-        bot.gss['nick'] = nick
+        bot.ss[engine]['links'] = links
+        bot.ss[engine]['query'] = parameters
+        bot.ss[engine]['current'] = 0
+        bot.ss[engine]['nick'] = nick
 
         bot.prevAction = 'search'
 
-        return bot.gss['links'][bot.gss['current']]
+        return bot.ss[engine]['links'][bot.ss[engine]['current']]
     return command_search
 
 def load(bot):
-  bot.gss = {  # Google Search State
-      'query': None,
-      'links': None,
-      'current': None,
-      'nick': None
-  }
-  bot.add_command('google', get_search_function('google'), LEVEL_GUEST, 'google')
-  bot.add_command('g', get_search_function('google'), LEVEL_GUEST, 'google')
-  bot.add_command(u'п', get_search_function('sputnik'), LEVEL_GUEST, 'rkn')
+    bot.ss = {  # Search State
+        'google': {
+            'query': None,
+            'links': None,
+            'current': None,
+            'nick': None
+        },
+        'sputnik': {
+            'query': None,
+            'links': None,
+            'current': None,
+            'nick': None
+        }
+    }
+    bot.add_command('google', get_search_function('google'), LEVEL_GUEST, 'google')
+    bot.add_command('g', get_search_function('google'), LEVEL_GUEST, 'google')
+    bot.add_command(u'п', get_search_function('sputnik'), LEVEL_GUEST, 'rkn')
 
 def unload(bot):
-  pass
+    pass
 
 def info(bot):
-  return 'Search plugin v2.0.0-alpha'
+    return 'Search plugin v2.0.1'
