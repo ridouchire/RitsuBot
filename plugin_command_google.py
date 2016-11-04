@@ -7,7 +7,7 @@ import requests
 import re
 import logging as log
 
-log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
 
 def get_search_page(query, engine):
     if not isinstance(query, str):
@@ -81,6 +81,8 @@ def get_search_function(engine):
         bot.gss['query'] = parameters
         bot.gss['current'] = 0
         bot.gss['nick'] = nick
+
+        bot.prevAction = 'search'
 
         return bot.gss['links'][bot.gss['current']]
     return command_search
