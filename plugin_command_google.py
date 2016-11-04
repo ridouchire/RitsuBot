@@ -38,14 +38,7 @@ def get_search_page(query, engine='google', custom_query_url=None):
         return None
     return response.content
 
-def get_links(query, engine):
-    try:
-        page = get_search_page(query, engine)
-    except Exception as e:
-        log.error('Query error: {}'.format(e))
-        page =  None
-    if page is None: return None
-
+def get_links(page, engine):
     result = []
     if engine is 'google':
         link_regex_str = r'<a href="(.*?)"'
@@ -75,9 +68,12 @@ def get_search_function(engine):
                     return bot.ss[engine]['links'][bot.ss[engine]['current']]
                 else:
                     return "End of search results. Please refine your search query."
-        links = get_link(parameters, engine)
-        if links is None:
+        try:
+            page = get_search_page(parameters, engine)
+        except Exception as e:
+            log.error('Query error: {}'.format(e))
             return 'Search error! Please contact your system administrator.'
+        links = get_links(page, engine)        
         if links is []:
             return 'Nothing is found!'
         bot.ss[engine]['links'] = links
