@@ -2,6 +2,7 @@
 
 from ritsu_utils import *
 from ritsu_api import *
+from ritsu_config import PROXY
 
 import requests
 import re
@@ -31,8 +32,15 @@ def get_search_page(query, engine='google', custom_query_url=None):
     headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:46.0) Gecko/20100101 Firefox/46.0'
     }
+    if PROXY['ENABLED']:
+        proxies = {
+            'http': 'http://{}:{}'.format(PROXY['HOST'], int(PROXY['PORT'])),
+            'https': 'https://{}:{}'.format(PROXY['HOST'], int(PROXY['PORT'])),
+        }
+    else:
+        proxies = None
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, proxies=proxies)
     except Exception as e:
         log.error('An error has occured while page loading: {}'.format(e))
         return None

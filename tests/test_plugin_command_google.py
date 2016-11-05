@@ -3,6 +3,8 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.curdir))
 from plugin_command_google import *
 from common import *
+from ritsu_config import PROXY
+
 import unittest
 from wsgiref.simple_server import make_server
 import threading
@@ -24,11 +26,6 @@ def test_server(environ, start_response):
     else:
         return ['Failed!']
 
-def debug(f, *args, **kwargs):
-    print("called", f, args)
-    print(dir(f))
-    return f(*args, **kwargs)
-
 httpd = make_server(host, int(port), test_server)
 print("Serving on port {}...".format(port))
 
@@ -44,6 +41,8 @@ class GetSearchPageTestCase(unittest.TestCase):
         self.server = threading.Thread(target=self.httpd.handle_request, args=(), kwargs={})
         self.server.start()
 
+    @unittest.skipIf(PROXY['ENABLED'],
+                     "not supported through proxy")
     def test_get_search_page_google(self):
         global se
         se = 'google'
@@ -52,6 +51,9 @@ class GetSearchPageTestCase(unittest.TestCase):
             get_search_page('python', se, self.url),
             open('tests/{}.python.html'.format(se)).read()
         )
+
+    @unittest.skipIf(PROXY['ENABLED'],
+                     "not supported through proxy")
     def test_get_search_page_sputnik(self):
         global se
         se = 'sputnik'
