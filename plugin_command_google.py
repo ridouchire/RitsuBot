@@ -17,7 +17,8 @@ def get_search_page(query, engine='google', custom_query_url=None):
         ))
     if len(query) is 0:
         raise ValueError('"query" length must be greater than 0"')
-
+    if isinstance(query, unicode):
+        query = query.decode('utf8')
     if custom_query_url:
         url = custom_query_url.format(query)
     if engine is 'google':
