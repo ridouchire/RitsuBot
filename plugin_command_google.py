@@ -74,7 +74,7 @@ def get_search_function(engine):
             log.error('Query error: {}'.format(e))
             return 'Search error! Please contact your system administrator.'
         links = get_links(page, engine)        
-        if links is []:
+        if links == []:
             return 'Nothing is found!'
         bot.ss[engine]['links'] = links
         bot.ss[engine]['query'] = parameters
