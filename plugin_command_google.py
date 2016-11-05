@@ -11,7 +11,7 @@ import logging as log
 log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
 
 def get_search_page(query, engine='google', custom_query_url=None):
-    if not isinstance(query, str):
+    if not isinstance(query, str) and not isinstance(query, unicode):
         raise TypeError('"query" must be "str", not "{}"'.format(
             query.__class__.__name__
         ))
