@@ -24,11 +24,12 @@ def event_room_message(bot, (message, room, nick)):
 
     text = message.getBody()
     if text:
-        if nick == bot.self_nick[room] and "'s link: " in text:
+        if nick == bot.self_nick[room] and hasattr(bot, 'prevAction') and \
+        bot.prevAction is 'title':
             return
         regex_str = ur'(?:http[s]?://[\w\d\-.]*\.[\w\d]*[:\d]*[/]?[/\$\-\~\.\+\=\&\!\?\*\'\(\)\,\%\w\u0410-\u044f]*)'
         regex = re.compile(regex_str, re.UNICODE)
-        try:
+        try:            
             link = re.findall(regex, text.decode('utf8'))
         except UnicodeEncodeError as e:
             link =  re.findall(regex, text)
@@ -40,6 +41,7 @@ def event_room_message(bot, (message, room, nick)):
                 return                
             try:
                 res = source.encode('utf8')
+                bot.prevAction = 'title'
                 bot.send_room_message(target, res)
             except Exception as e:
                 log.error('An error occurred while sending a title parsing result.: {}'.format(e))              

@@ -1,103 +1,121 @@
 # -*- coding:utf-8 -*-
-import urllib, urllib2, json, re
+
 from ritsu_utils import *
 from ritsu_api import *
-from ritsu_config import GOOGLE_KEY
+from ritsu_config import PROXY
 
-def duckduckgosearch(query, num=0, safe="off"):
-    url = 'http://api.duckduckgo.com/?q=%s&format=json&pretty=1&t=no_html&t=no_redirect&t=skip_disambig'%(urllib.quote_plus(query.encode('utf-8')))
-    rec = urllib2.urlopen(url)
-    js = json.loads(rec.read())
-    results = js['RelatedTopics']
-    if len(results)>num:
-        r = results[num]
-        content = r['Result']
-        content = content.replace('<b>', '')
-        content = content.replace('</b>', '')
-        content = unhtml(content)
-        title = unhtml(r['Text'])
-        return '%s\n%s'%(title, js['AbstractURL'])
+import requests
+import re
+import logging as log
+
+log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+
+def get_search_page(query, engine='google', custom_query_url=None):
+    if not isinstance(query, str) and not isinstance(query, unicode):
+        raise TypeError('"query" must be "str", not "{}"'.format(
+            query.__class__.__name__
+        ))
+    if len(query) is 0:
+        raise ValueError('"query" length must be greater than 0"')
+    if isinstance(query, unicode):
+        query = query.encode('utf8')
+    if custom_query_url:
+        url = custom_query_url.format(query)
+    if engine is 'google':
+        url = "https://www.google.com/search?q={}".format(query)
+    elif engine is 'sputnik':
+         url = "http://www.sputnik.ru/search?q={}".format(query)
     else:
-        return 'Nothing found.'
+        raise ValueError('"engine" must be either "google" or "sputnik"')
+    if custom_query_url:
+        url = custom_query_url.format(query)
+    url = requests.utils.requote_uri(url)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:46.0) Gecko/20100101 Firefox/46.0'
+    }
+    if PROXY['ENABLED']:
+        proxies = {
+            'http': 'http://{}:{}'.format(PROXY['HOST'], int(PROXY['PORT'])),
+            'https': 'https://{}:{}'.format(PROXY['HOST'], int(PROXY['PORT'])),
+        }
+    else:
+        proxies = None
+    try:
+        response = requests.get(url, headers=headers, proxies=proxies)
+    except Exception as e:
+        log.error('An error has occured while page loading: {}'.format(e))
+        return None
+    return response.content
 
-def googlesearch(query, num=0, safe="off"):
-  url = 'http://ajax.googleapis.com/ajax/services/search/web?v=1.0%s&safe=%s&q=%s'%(
-    GOOGLE_KEY,
-    safe,
-    urllib.quote_plus(query.encode('utf-8'))
-  )
-  rec = urllib2.urlopen(url)
-  js = json.loads(rec.read())
-  results = js['responseData']['results']
-  if len(results)>num:
-    r = results[num]
-    #reg = re.compile('<b>([^<]+)</b>', re.IGNORECASE)
-    #content = reg.sub('\\1', r['content'])
-    content = r['content']
-    content = content.replace('<b>', '')
-    content = content.replace('</b>', '')
-    content = unhtml(content)
-    title = unhtml(r['titleNoFormatting'])
-    return '%s\n%s\n%s'%(title, content, r['unescapedUrl'])
-  else:
-    return 'Nothing found.'
+def get_links(page, engine):
+    result = []
+    if engine is 'google':
+        link_regex_str = r'<a href="(.*?)"'
+        links = [link.split(' ')[0] for link in re.findall(link_regex_str, page)
+                 if link.startswith('http')]
+        log.debug(links)
+        for link in links:
+            googlestuff = re.compile(r'.*[.]*google[.]+')
+            if not re.match(googlestuff, link) and link not in result:
+                result.append(link)            
+    elif engine is 'sputnik':
+        link_regex_str = r'<div class=\"b-result-title\">.*<a href=\"(.*?)\".*<\/div>'
+        result = re.findall(link_regex_str, page)
+    else:
+        raise ValueError('"engine" must be either "google" or "sputnik"')
+    return result
 
-def googleimagesearch(query, safe="off"):
-  url = 'http://ajax.googleapis.com/ajax/services/search/images?v=1.0%s&safe=%s&q=%s'%(
-    GOOGLE_KEY,
-    safe,
-    urllib.quote_plus(query.encode('utf-8'))
-  )
-  rec = urllib2.urlopen(url)
-  js = json.loads(rec.read())
-  results = js['responseData']['results']
-  if len(results)>0:
-    return results[0]['unescapedUrl']
-  else:
-    return 'Nothing found.'
+def get_search_function(engine):
+    def command_search(bot, room, nick, access_level, parameters, message):
+        if nick != bot.ss[engine]['nick']:
+            if not parameters:
+                return 'Query expected.'    
+        else:
+            if parameters == bot.ss[engine]['query'] or not parameters:
+                if bot.ss[engine]['current'] < len(bot.ss[engine]['links']) - 1:
+                    bot.ss[engine]['current'] = bot.ss[engine]['current'] + 1
+                    return bot.ss[engine]['links'][bot.ss[engine]['current']]
+                else:
+                    return "End of search results. Please refine your search query."
+        try:
+            page = get_search_page(parameters, engine)
+        except Exception as e:
+            log.error('Query error: {}'.format(e))
+            return 'Search error! Please contact your system administrator.'
+        links = get_links(page, engine)        
+        if links == []:
+            return 'Nothing is found!'
+        bot.ss[engine]['links'] = links
+        bot.ss[engine]['query'] = parameters
+        bot.ss[engine]['current'] = 0
+        bot.ss[engine]['nick'] = nick
 
-def command_google(bot, room, nick, access_level, parameters, message):
-  if not parameters: return 'Query expected.'
-  if 'safesearch' in bot.get_config(room, 'options'):
-    safe = "active"
-  else:
-    safe = "off"
-  try: res = duckduckgosearch(parameters, 0, safe)
-  except: res = 'An error occured.'
-  return res
+        bot.prevAction = 'search'
 
-def command_image(bot, room, nick, access_level, parameters, message):
-  if not parameters: return 'Query expected.'
-  if 'safesearch' in bot.get_config(room, 'options'):
-    safe = "active"
-  else:
-    safe = "off"
-  try: res = googleimagesearch(parameters, safe)
-  except: res = 'An error occured.'
-  return res
-
-LANGCODES = [
-  'af','sq','ar','hy','az','eu','be','bn','bg','ca','hr','cs','da',
-  'nl','en','et','tl','fi','fr','gl','ka','de','el','gu','ht','iw',
-  'hi','hu','is','id','ga','it','ja','kn','ko','la','lv','lt','mk',
-  'ms','mt','no','fa','pl','pt','ro','ru','sr','sk','sl','es','sw',
-  'sv','ta','te','th','tr','uk','ur','vi','cy','yi','zh-CN','zh-TW'
-]
+        return bot.ss[engine]['links'][bot.ss[engine]['current']]
+    return command_search
 
 def load(bot):
-  global langreg
-  bot.add_command('google', command_google, LEVEL_GUEST, 'google')
-  bot.add_command('g', command_google, LEVEL_GUEST, 'google')
-  bot.add_command(u'п', command_google, LEVEL_GUEST, 'google')
-  bot.add_command('image', command_image, LEVEL_GUEST, 'google')
- # bot.add_command('calc', command_calc, LEVEL_GUEST, 'google')
- # bot.add_command('translate', command_translate, LEVEL_GUEST, 'google')
- # bot.add_command('tr', command_translate, LEVEL_GUEST, 'google')
-  l = '|'.join(LANGCODES)
-  langreg = re.compile('(?:(%s) )?(?:(%s) )?(.+)'%(l, l), re.IGNORECASE | re.DOTALL)
+    bot.ss = {  # Search State
+        'google': {
+            'query': None,
+            'links': None,
+            'current': None,
+            'nick': None
+        },
+        'sputnik': {
+            'query': None,
+            'links': None,
+            'current': None,
+            'nick': None
+        }
+    }
+    bot.add_command('google', get_search_function('google'), LEVEL_GUEST, 'google')
+    bot.add_command('g', get_search_function('google'), LEVEL_GUEST, 'google')
+    bot.add_command(u'п', get_search_function('sputnik'), LEVEL_GUEST, 'rkn')
 
 def unload(bot):
-  pass
+    pass
 
 def info(bot):
-  return 'Google plugin v1.0.3'
+    return 'Search plugin v2.0.1'

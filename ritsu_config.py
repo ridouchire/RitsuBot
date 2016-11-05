@@ -8,6 +8,12 @@ LOG_PATH = BOT_HOME + './'
 
 GOOGLE_KEY = '' #'&key=ABCDEF'
 
+PROXY = {
+    'HOST': None,
+    'PORT': None,
+    'ENABLED': False
+}
+
 configuration1 = {
   'jid': '',
   'server': ('ume.mooo.com', 5222), # ('1.2.3.4', 5222)
