@@ -2,13 +2,14 @@
 import re
 from ritsu_api import *
 from ritsu_utils import *
-import urllib2
+from ritsu_config import PROXY
 
+import urllib2
 import logging as log
 log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
 
 def info(bot):
-    return 'Links parsing plugin 1.0.0-alpha'
+    return 'Links parsing plugin 1.1.0'
 
 def load(bot):
     pass
@@ -56,9 +57,17 @@ def get_title(rec):
         return None
 
 def get_link_title(link):
-  try:
+  if PROXY['ENABLED']:
+    opener = urllib2.build_opener(
+      urllib2.ProxyHandler({
+        'http': '{}:{}'.format(PROXY['HOST'], PROXY['PORT']),
+        'http': '{}:{}'.format(PROXY['HOST'], PROXY['PORT'])
+      })
+    )
+  else:
     opener = urllib2.build_opener()
-    opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux i686; rv:40.0) Gecko/20100101 Firefox/40.0')]
+  opener.addheaders = [('User-agent', 'Mozilla/5.0 (X11; Linux i686; rv:40.0) Gecko/20100101 Firefox/40.0')]
+  try:
     site = opener.open(link)
   except urllib2.HTTPError, e:
     if e.code == 404:
