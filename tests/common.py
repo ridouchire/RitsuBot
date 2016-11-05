@@ -1,5 +1,5 @@
 class Message:
-    def __init__(self, text):
+    def __init__(self, text=''):
         self.text = text
         
     def getType(self):
@@ -14,6 +14,8 @@ class Bot:
         self.self_nick[room] = nick
     def send_room_message(self, target, res):
         print('target: {}, message: {}\n'.format(target, res))
+    def add_command(self, *args, **kwargs):
+        pass
     
 room = 'ume@conference.ume.mooo.com'
 nick = 'test'
