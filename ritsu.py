@@ -64,16 +64,15 @@ class RitsuBot(object):
     force_directory(DATA_PATH)
     force_directory(LOG_PATH)
     self.commands = {}
-    self.add_command('crash', self.command_crash, LEVEL_BOT_OWNER) 	# закладка в исключительной ситуации
-    self.add_command('quit', self.command_quit, LEVEL_BOT_OWNER)	# завершение работы
+    self.add_command('quit', self.command_quit, LEVEL_BOT_OWNER)
     self.add_command('setnick', self.command_setnick, LEVEL_ADMIN)
     self.add_command('setstatus', self.command_setstatus, LEVEL_ADMIN)
-    self.add_command('access', self.command_access, LEVEL_GUEST)	# уровень доступа
-    self.add_command('help', self.command_list, LEVEL_GUEST)		# список всех активных команд
-    self.add_command('source', self.command_source, LEVEL_GUEST)	# версия
+    self.add_command('access', self.command_access, LEVEL_GUEST)
+    self.add_command('help', self.command_list, LEVEL_GUEST)
+    self.add_command('source', self.command_source, LEVEL_GUEST)
     self.add_command('reload', self.auto_reload_plugin, LEVEL_OWNER)
-    self.add_command('unload', self.inter_unload_plugin, LEVEL_OWNER)   # выгрузка выбранного плагина
-    self.add_command('load', self.inter_load_plugin, LEVEL_OWNER) 	# загрузка плагина
+    self.add_command('unload', self.inter_unload_plugin, LEVEL_OWNER)
+    self.add_command('load', self.inter_load_plugin, LEVEL_OWNER)
 
     jid = xmpp.JID(self.configuration['jid'])
     server = self.configuration['server']
