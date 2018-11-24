@@ -13,4 +13,4 @@ def unload(bot):
   pass
 
 def info(bot):
-  return 'Beep plugin v1.0'
+  return 'Beep plugin v1.0.0'

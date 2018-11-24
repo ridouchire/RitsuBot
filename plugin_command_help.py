@@ -7,7 +7,7 @@ def unload(bot):
   pass
 
 def info(bot):
-  return 'Help Commands Plugin v0.1'
+  return 'Help Commands Plugin v0.0.2'
 
 def command_help(bot, room, nick, access_level, parameters, message):
   return '''

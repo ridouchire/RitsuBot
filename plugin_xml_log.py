@@ -16,4 +16,4 @@ def unload(bot):
   pass
 
 def info(bot):
-  return 'XML log plugin v1.0'
+  return 'XML log plugin v1.0.0'

@@ -141,11 +141,8 @@ class RitsuBot(object):
     return 'Technical works, please wait...'
 
   def load_plugins(self):
-    # загрузка всех плагинов
     for plugin in self.configuration['plugins']:
-      # дёргаем имена плагинов
       self.load_plugin('plugin_%s'%(plugin))
-      # и ищем их в директории
 
   def load_plugin(self, plugin):
     if plugin in self.plugins:
@@ -158,16 +155,14 @@ class RitsuBot(object):
         if x[:6] == 'event_':
           self.__getattribute__(x).add(p.__getattribute__(x))
       p.load(self)
-      self.log_info('Plugin %s loaded: %s'%(plugin, p.info(self))) # имя и версия плагина в stdout
+      self.log_info('Plugin %s loaded: %s'%(plugin, p.info(self)))
       if len(self.plugin_commands[plugin]) > 0:
         self.log_info('Plugin %s added commands %s'%(plugin, self.plugin_commands[plugin]))
-        # показываем список добавленных команд, кроме общих - объявлены выше в классе бота
       self.plugins[plugin] = p
       return p
     except:
       self.log_error('Plugin %s raised an exception and was not loaded\n%s'%
         (plugin, traceback.format_exc()))
-        # при ошибке плагина выводим трассировочную информацию в stdout и error-лог
 
   def reload_plugin(self, plugin):
     if not plugin in self.plugins:
@@ -236,15 +231,12 @@ class RitsuBot(object):
 
   def save_database(self, name, data):
     serialize('%s%s.db'%(DATA_PATH, name), data)
-    # сериализация объекта хранения
 
   def load_database(self, name):
     return unserialize('%s%s.db'%(DATA_PATH, name))
-    # десериализация для чтения
 
   def writelog(self, filename, text):
     writelog(LOG_PATH+filename, text)
-    # итак всё ясно
 
   def log_debug(self, message):
     if self.configuration['log_level'] >= 4:
@@ -253,7 +245,6 @@ class RitsuBot(object):
       if self.configuration['echo_log']:
         try: print res
         except: pass
-        # пищим по каждому поводу, ну
 
   def log_info(self, message):
     if self.configuration['log_level'] >= 3:
@@ -262,7 +253,6 @@ class RitsuBot(object):
       if self.configuration['echo_log']:
         try: print res
         except: pass
-        # информационный вывод при обычном запуске
 
   def log_warn(self, message):
     if self.configuration['log_level'] >= 2:
@@ -271,7 +261,6 @@ class RitsuBot(object):
       if self.configuration['echo_log']:
         try: print res
         except: pass
-        # предупреждения
 
   def log_error(self, message):
     if self.configuration['log_level'] >= 1:
@@ -280,35 +269,25 @@ class RitsuBot(object):
       if self.configuration['echo_log']:
         try: print res
         except: pass
-        # ошибки
 
   def get_config(self, room, config):
-    # загрузка конфигурации
     if room in self.configuration['mucs'] and config in self.configuration['mucs'][room]:
-      # загружаем список конфочек и
       return self.configuration['mucs'][room][config]
-      # их настройки
     elif config in self.configuration:
-      # если конфочек нет
       return self.configuration[config]
     else:
-      # если нет конфигурации
       return None
 
   def in_roster(self, room, nick):
-    # добавляем ник в ростер
     return room in self.roster and nick in self.roster[room]
 
   def is_bot_owner(self, room, nick):
-    # проверка на уровень доступа овнера
-    #FIXME: может не работать на полностью анонимных серверах
     if not self.in_roster(room, nick): return False
     jid = self.roster[room][nick][ROSTER_JID]
     if jid != None: jid = xmpp.JID(jid).getStripped().lower()
     return jid in self.configuration['bot_owners']
 
   def presence_room_bot(self, room, show='available', status=""):
-    # посылаем входящий презенс в конфочку
     p = xmpp.Presence(
       '%s/%s'%(room, self.self_nick[room]),
       show=show,
@@ -338,7 +317,6 @@ class RitsuBot(object):
     self.client.send(p)
 
   def check_command_room_option(self, room, command):
-    # проверяем отключенные в конфочке команды
     option = self.commands[command]['option']
     if option and not option in self.get_config(room, 'options'): return False
     return True
@@ -361,26 +339,21 @@ class RitsuBot(object):
     self.handle_command(text, message, room, nick)
 
   def handle_command(self, text, message, room, nick):
-    # парсим команды и параметры
-    # скип префикса, если личка
     s = text.split(' ', 1)
     cut = s[0]
     rest = len(s)>1 and s[1] or ''
 
     command = ''
     prefix = self.get_config(room, 'command_prefix')
-    # без префикса пока не работает
     if cut and cut[0] == prefix: command = cut[1:]
-    # отрезаем префикс
     elif message.getType() != 'groupchat': command = cut
-    # если личка, то префикса нет
     if rest and cut == self.self_nick[room]+':' or cut == self.self_nick[room]+',':
       s = rest.split(' ', 1)
       cut = s[0]
       rest = len(s)>1 and s[1] or ''
       if cut and cut[0] == prefix: command = cut[1:]
       else: command = cut
-    # also allow blahblah [command parameters] blahblah
+    # also allow blahblah [command parameters]
     if not command:
       p = text.find('[')
       if p != -1:
@@ -519,7 +492,6 @@ class RitsuBot(object):
     reason = item.getTagData('reason')
 
     if presence.getType() == 'unavailable':
-      # user leaving
       if nick in self.roster[room]:
         if '303' in status_codes:
           newnick = item.getAttr('nick')
@@ -541,7 +513,6 @@ class RitsuBot(object):
       else:
         self.log_warn('Unexpected unavailable presence from nick not in roster: %s'%(presence))
     else:
-      # user joining or changing their status
       status = presence.getTagData('show') or 'online'
       status_text = presence.getTagData('status')
 
@@ -556,15 +527,11 @@ class RitsuBot(object):
         if self.roster[room][nick][ROSTER_STATUS] != status or self.roster[room][nick][ROSTER_STATUS_TEXT] != status_text:
           self.event_status_changed(self, (presence, room, nick, jid, status, status_text))
       else:
-        # user joining
         if room in self.joined_rooms:
           self.event_joined(self, (presence, room, nick, jid, role, affiliation, status, status_text))
         else:
           self.event_room_roster(self, (presence, room, nick, jid, role, affiliation, status, status_text))
-          # joining, getting room roster, self-presence
           if nick == self.self_nick[room]:
-            #and '110' in status_codes
-            # ejabberd doesn't attach status code 110
             self.joined_rooms.append(room)
             self.log_info('Joined room %s'%(room))
 
@@ -583,7 +550,7 @@ class RitsuBot(object):
     self.client.send(m)
 
   def command_crash(self, room, nick, access_level, parameters, message):
-    # банально - вызываем несуществующую функцию в классе
+    #FIXME: WTF?
     self.herpderpadasdasdasfkalsjfakjqweuqwhfajh
 
   def command_quit(self, room, nick, access_level, parameters, message):

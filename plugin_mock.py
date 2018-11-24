@@ -30,8 +30,6 @@ def event_room_message(bot, (message, room, nick)):
     elif text == u'что тут у вас?': res = u'Заговор.'
     elif text == u'КОЛДУНСТВО': res = u'Пиздунство, блядь.'
     elif text == u'а': res = u'Б.'
-    #elif text == 'k':    res = 'You forgot "o".'
-    #elif text == 'lol':  res = '/me laughs out loud.'
     if res:
       bot.send_room_message(room, res)
 
@@ -42,4 +40,4 @@ def unload(bot):
   pass
 
 def info(bot):
-  return 'Mock plugin v1.0'
+  return 'Mock plugin v1.0.3'

@@ -118,4 +118,4 @@ def unload(bot):
     pass
 
 def info(bot):
-    return 'Search plugin v2.0.1'
+    return 'Search plugin v2.0.1 [Obsolete]'

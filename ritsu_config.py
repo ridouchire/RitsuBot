@@ -56,15 +56,15 @@ configuration1 = {
     }
   },
   'plugins': [
-   # 'xoma_add',
+    # 'xoma_add',
     'logger',
     'titlelink',
-   # 'youtube',
+    # 'youtube',
     #'mock',
     'command_beep',
     'command_shell',
-#    'user_limits',
-#    'command_google',
+    #'user_limits',
+    #'command_google',
     'command_ping',
     'command_users',
     'command_admin',
@@ -73,6 +73,6 @@ configuration1 = {
     'command_blogs',
     'command_www',
     'command_timebomb',
-#    'command_registation',
+    #'command_registation',
   ]
 }

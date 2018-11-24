@@ -3,8 +3,6 @@ import urllib, urllib2, re, random, time
 from ritsu_utils import *
 from ritsu_api import *
 
-xoma_db = {}
-
 def load(bot):
   global langreg
   bot.add_command('whtask', command_whtask, LEVEL_GUEST)
@@ -18,10 +16,9 @@ def unload(bot):
   pass
 
 def info(bot):
-  return 'WWW plugin v1.0.3'
+  return 'WWW plugin v1.0.4'
 
 def command_d(bot, room, nick, access_level, parameters, message):
-    '''Проверить, лежит ли сайт'''
     if not parameters:
         return
     try:
@@ -38,7 +35,6 @@ def command_true(bot, room, nick, access_level, parameters, message):
 
 def command_whtask(bot, room, nick, access_level, parameters, message):
   if parameters:
-    # parameters = parameters + u', астрал'
     listtask = parameters.split(',')
     number = random.randint(1, len(listtask))
     result = listtask[number-1]
